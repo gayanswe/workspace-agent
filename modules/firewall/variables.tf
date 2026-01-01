@@ -1,9 +1,14 @@
 variable "project_id" {
+  description = "The ID of the project in which to provision resources."
   type        = string
-  description = "The ID of the project"
 }
 
 variable "network_name" {
+  description = "The name of the network to attach the firewall to."
   type        = string
-  description = "The name of the VPC network"
+}
+
+variable "environment" {
+    description = "The environment this is deployed to."
+    type = string
 }
