@@ -1,5 +1,5 @@
 resource "google_compute_firewall" "allow_ssh" {
-  name    = "allow-ssh"
+  name    = "${var.environment}-newproject-allow-ssh"
   network = var.network_name
   project = var.project_id
 
@@ -8,20 +8,20 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["ssh"] # To apply firewall rule to specific instances, add tag 'ssh' to the instance.
+  source_ranges = ["0.0.0.0/0"] # Consider narrowing this for production
+
+  target_tags = ["ssh"] # Apply this tag to instances needing SSH access
 }
 
 resource "google_compute_firewall" "allow_egress" {
-  name    = "allow-egress"
+  name    = "${var.environment}-newproject-allow-egress"
   network = var.network_name
   project = var.project_id
 
+  direction = "EGRESS"
   allow {
     protocol = "all"
-    ports    = ["0-65535"]
   }
 
   destination_ranges = ["0.0.0.0/0"]
-  direction          = "EGRESS" # Set direction to Egress
 }
