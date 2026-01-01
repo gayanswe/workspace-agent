@@ -1,26 +1,29 @@
 variable "project_id" {
+  description = "The ID of the project in which to provision resources."
   type        = string
-  description = "The ID of the project"
 }
 
 variable "region" {
+  description = "The region in which to provision resources."
   type        = string
-  description = "The region to deploy the VPC"
 }
 
 variable "vpc_name" {
+  description = "The name of the VPC."
   type        = string
-  description = "The name of the VPC"
-  default     = "dev-vpc"
-}
-
-variable "subnet_name" {
-  type        = string
-  description = "The name of the subnet"
-  default     = "dev-subnet"
 }
 
 variable "subnet_cidr" {
+  description = "The CIDR range for the subnet."
   type        = string
-  description = "The CIDR range for the subnet"
+}
+
+variable "subnet_name" {
+  description = "The name of the Subnet."
+  type        = string
+}
+
+variable "environment" {
+  description = "The environment this is deployed to."
+  type        = string
 }
