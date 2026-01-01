@@ -1,19 +1,24 @@
 variable "project_id" {
+  description = "The ID of the project in which to provision resources."
   type        = string
-  description = "The ID of the project"
 }
 
 variable "region" {
+  description = "The region in which to provision resources."
   type        = string
-  description = "The region to deploy the Cloud NAT"
 }
 
-variable "network_name" {
-  type        = string
-  description = "The name of the VPC network"
+variable "environment" {
+    description = "The environment this is deployed to."
+    type = string
 }
 
 variable "subnet_name" {
+  description = "The name of the subnet to enable Cloud NAT for."
   type        = string
-  description = "The name of the subnet"
+}
+
+variable "network_name" {
+  description = "The name of the network."
+  type        = string
 }
