@@ -40,8 +40,8 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"] # For administration access from any IP, refine as needed
-  target_tags   = ["ssh-enabled"] # Apply this tag to instances that need SSH access
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["ssh-enabled"]
 }
 
 resource "google_compute_firewall" "allow_egress_all" {
