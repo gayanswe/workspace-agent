@@ -1,0 +1,7 @@
+# Terraform
+.terraform/
+*.tfplan
+.terraform.lock.hcl
+
+# Note: .tfstate files are tracked in repo for simplicity
+# For production, configure a remote backend (GCS, S3, etc.)
