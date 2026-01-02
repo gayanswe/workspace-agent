@@ -4,21 +4,36 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "GCP Region for the subnet."
+  description = "GCP Region for the VPC and subnet."
   type        = string
 }
 
 variable "environment" {
-  description = "Deployment environment (e.g., dev, staging, prod) for naming."
+  description = "The environment (e.g., dev, stage, prod)."
   type        = string
 }
 
-variable "project_name_prefix" {
-  description = "A short identifier for the project, used in resource naming conventions."
+variable "project_name" {
+  description = "A short name for the project, used in resource naming."
   type        = string
 }
 
-variable "subnet_ip_cidr_range" {
-  description = "IP CIDR range for the custom subnet."
+variable "vpc_name" {
+  description = "The name of the VPC network to create."
+  type        = string
+}
+
+variable "vpc_cidr_range" {
+  description = "The CIDR range for the VPC network."
+  type        = string
+}
+
+variable "subnet_name" {
+  description = "The name of the private subnetwork to create."
+  type        = string
+}
+
+variable "subnet_cidr_range" {
+  description = "The CIDR range for the private subnetwork."
   type        = string
 }
