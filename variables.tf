@@ -11,25 +11,19 @@ variable "region" {
 }
 
 variable "vpc_name" {
-  description = "Name of the VPC"
+  description = "Base name for the VPC and related resources. (e.g., prod-newproject)"
   type        = string
-  default     = "main-vpc"
+  default     = "prod-newproject"
 }
 
-variable "private_subnet_cidr" {
+variable "subnet_cidr" {
   description = "CIDR range for the private subnet"
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "github_cicd_ips" {
-  description = "List of IP ranges for GitHub CI/CD to allow SSH access"
+variable "ssh_source_ranges" {
+  description = "List of CIDR ranges allowed to connect via SSH. CRITICAL: Narrow this to specific IPs for production."
   type        = list(string)
-  default     = ["192.30.252.0/22", "185.199.108.0/22", "140.82.112.0/20"]
-}
-
-variable "vpc_cidr" {
-  description = "Overall CIDR block for the VPC, used for internal firewall rules."
-  type        = string
-  default     = "10.0.0.0/16" # Zen's architecture specified this
+  default     = ["0.0.0.0/0"] # WARNING: In production, narrow this to specific admin IPs.
 }
