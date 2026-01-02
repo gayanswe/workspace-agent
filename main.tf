@@ -1,59 +1,74 @@
+terraform {
+  required_version = ">= 1.5.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+}
+
 provider "google" {
   project = var.project_id
   region  = var.region
 }
 
-module "vpc_network" {
-  source              = "./modules/vpc"
-  project_id          = var.project_id
-  region              = var.region
-  environment         = var.environment
-  project_name_prefix = var.project_name_prefix
-  vpc_network_name    = var.vpc_network_name
-  subnet_cidr_block   = var.subnet_cidr_block
+resource "google_compute_network" "vpc" {
+  name                    = var.vpc_name
+  project                 = var.project_id
+  auto_create_subnetworks = false
+  routing_mode            = "REGIONAL"
+}
+
+resource "google_compute_subnetwork" "subnet" {
+  name                     = "${var.vpc_name}-subnet"
+  project                  = var.project_id
+  region                   = var.region
+  network                  = google_compute_network.vpc.self_link
+  ip_cidr_range            = var.subnet_cidr
+  private_ip_google_access = true
 }
 
 resource "google_compute_firewall" "allow_ssh" {
-  name        = "${var.environment}-${var.project_name_prefix}-allow-ssh-${var.region}"
-  network     = module.vpc_network.network_self_link
-  project     = var.project_id
-  description = "Allow SSH access to instances with 'ssh' tag"
-  priority    = 1000 # Default priority
+  name      = "${var.vpc_name}-allow-ssh"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "INGRESS"
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  source_ranges = var.ssh_allowed_ips
-  target_tags   = ["ssh"] # Instances must have this tag to receive SSH traffic
-
-  labels = {
-    environment = var.environment
-    project     = var.project_name_prefix
-    managed_by  = "terraform"
-    created_by  = "opscontinuum"
-  }
+  source_ranges = var.ssh_source_ranges # Using the variable for source ranges
+  target_tags   = ["ssh-enabled"]       # Apply to instances with this tag
 }
 
 resource "google_compute_firewall" "allow_egress" {
-  name        = "${var.environment}-${var.project_name_prefix}-allow-egress-${var.region}"
-  network     = module.vpc_network.network_self_link
-  project     = var.project_id
-  description = "Allow all egress traffic from the network"
-  direction   = "EGRESS"
-  priority    = 1000 # Default priority
+  name      = "${var.vpc_name}-allow-egress"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "EGRESS"
 
   allow {
     protocol = "all"
   }
 
   destination_ranges = ["0.0.0.0/0"]
+}
 
-  labels = {
-    environment = var.environment
-    project     = var.project_name_prefix
-    managed_by  = "terraform"
-    created_by  = "opscontinuum"
-  }
+resource "google_compute_router" "router" {
+  name    = "${var.vpc_name}-router"
+  project = var.project_id
+  region  = var.region
+  network = google_compute_network.vpc.self_link
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = "${var.vpc_name}-nat"
+  project                            = var.project_id
+  region                             = var.region
+  router                             = google_compute_router.router.name
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
