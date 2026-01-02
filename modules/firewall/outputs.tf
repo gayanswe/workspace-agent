@@ -1,9 +1,9 @@
-output "firewall_ssh_rule_name" {
-  description = "The name of the firewall rule allowing SSH from GitHub CI/CD."
-  value       = google_compute_firewall.allow_ssh_github.name
+output "allow_ssh_rule_name" {
+  description = "The name of the SSH ingress firewall rule."
+  value       = google_compute_firewall.allow_ssh.name
 }
 
-output "firewall_egress_rule_name" {
-  description = "The name of the firewall rule allowing all egress traffic."
+output "allow_egress_all_rule_name" {
+  description = "The name of the all egress firewall rule."
   value       = google_compute_firewall.allow_egress_all.name
 }
