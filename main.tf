@@ -21,7 +21,7 @@ resource "google_compute_network" "vpc" {
 }
 
 resource "google_compute_subnetwork" "subnet" {
-  name                     = "${var.vpc_name}-subnet"
+  name                     = var.subnet_name
   project                  = var.project_id
   region                   = var.region
   network                  = google_compute_network.vpc.self_link
@@ -29,24 +29,8 @@ resource "google_compute_subnetwork" "subnet" {
   private_ip_google_access = true
 }
 
-resource "google_compute_router" "router" {
-  name    = "${var.vpc_name}-router"
-  project = var.project_id
-  region  = var.region
-  network = google_compute_network.vpc.self_link
-}
-
-resource "google_compute_router_nat" "nat" {
-  name                               = "${var.vpc_name}-nat"
-  project                            = var.project_id
-  region                             = var.region
-  router                             = google_compute_router.router.name
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-}
-
 resource "google_compute_firewall" "allow_ssh" {
-  name      = "new-project-allow-ssh"
+  name      = var.ssh_firewall_name
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
   direction = "INGRESS"
@@ -56,27 +40,12 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["ssh-enabled"]
-  priority      = 1000
-}
-
-resource "google_compute_firewall" "deny_all_ingress" {
-  name      = "new-project-deny-all-ingress"
-  project   = var.project_id
-  network   = google_compute_network.vpc.self_link
-  direction = "INGRESS"
-
-  deny {
-    protocol = "all"
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  priority      = 65535
+  source_ranges = ["0.0.0.0/0"] # For administration access from any IP, refine as needed
+  target_tags   = ["ssh-enabled"] # Apply this tag to instances that need SSH access
 }
 
 resource "google_compute_firewall" "allow_egress_all" {
-  name      = "${var.vpc_name}-allow-egress-all"
+  name      = var.egress_firewall_name
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
   direction = "EGRESS"
@@ -86,5 +55,20 @@ resource "google_compute_firewall" "allow_egress_all" {
   }
 
   destination_ranges = ["0.0.0.0/0"]
-  priority           = 1000
+}
+
+resource "google_compute_router" "router" {
+  name    = var.nat_router_name
+  project = var.project_id
+  region  = var.region
+  network = google_compute_network.vpc.self_link
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = var.nat_name
+  project                            = var.project_id
+  region                             = var.region
+  router                             = google_compute_router.router.name
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
