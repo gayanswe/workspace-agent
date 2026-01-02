@@ -1,9 +1,9 @@
-output "vpc_name" {
-  description = "The name of the VPC"
-  value       = module.vpc.network_name
+output "vpc_id" {
+  value = module.vpc.network_id
+  description = "The ID of the VPC"
 }
 
-output "subnet_name" {
-  description = "The name of the subnet"
-  value       = module.vpc.subnet_name
+output "subnet_id" {
+  value = module.vpc.subnet_id
+  description = "The ID of the subnet"
 }
