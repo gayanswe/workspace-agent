@@ -11,19 +11,25 @@ variable "region" {
 }
 
 variable "vpc_name" {
-  description = "Base name for the VPC and related resources. (e.g., prod-newproject)"
+  description = "Name of the VPC network"
   type        = string
-  default     = "prod-newproject"
+  default     = "new-project-vpc"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR range for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
 }
 
 variable "subnet_cidr" {
-  description = "CIDR range for the private subnet"
+  description = "CIDR range for the subnet"
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "ssh_source_ranges" {
-  description = "List of CIDR ranges allowed to connect via SSH. CRITICAL: Narrow this to specific IPs for production."
+variable "github_ci_cd_ip_ranges" {
+  description = "List of CIDR ranges from which GitHub CI/CD is allowed to SSH"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # WARNING: In production, narrow this to specific admin IPs.
+  default     = ["0.0.0.0/0"]
 }
