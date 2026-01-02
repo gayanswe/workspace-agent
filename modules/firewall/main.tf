@@ -1,43 +1,37 @@
-resource "google_compute_firewall" "allow_ssh_github" {
-  project     = var.project_id
-  name        = var.firewall_ssh_name
-  network     = var.vpc_network_name
-  description = "Allow SSH ingress from GitHub CI/CD source ranges."
-
+resource "google_compute_firewall" "allow_ssh" {
+  project       = var.project_id
+  name          = "${var.environment}-${var.project_short_name}-allow-ssh"
+  network       = var.network_name
   direction     = "INGRESS"
-  priority      = 1000 # Default priority, can be adjusted
-  source_ranges = var.github_ci_cd_source_ranges
+  source_ranges = var.client_ip_ssh_source_range
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
-
+  description = "Allows SSH (TCP/22) ingress from specified IP ranges to instances in ${var.network_name}."
   labels = {
     environment = var.environment
-    project     = var.project_name
+    project     = var.project_short_name
     managed_by  = "terraform"
     created_by  = "opscontinuum"
   }
 }
 
 resource "google_compute_firewall" "allow_egress_all" {
-  project     = var.project_id
-  name        = var.firewall_egress_name
-  network     = var.vpc_network_name
-  description = "Allow all egress traffic from instances in the VPC."
-
-  direction        = "EGRESS"
-  priority         = 1000 # Default priority, can be adjusted
-  destination_ranges = ["0.0.0.0/0"] # Allow egress to all destinations
+  project            = var.project_id
+  name               = "${var.environment}-${var.project_short_name}-allow-egress-all"
+  network            = var.network_name
+  direction          = "EGRESS"
+  destination_ranges = ["0.0.0.0/0"]
 
   allow {
     protocol = "all"
   }
-
+  description = "Allows all egress traffic from instances in ${var.network_name}."
   labels = {
     environment = var.environment
-    project     = var.project_name
+    project     = var.project_short_name
     managed_by  = "terraform"
     created_by  = "opscontinuum"
   }
