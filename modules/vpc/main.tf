@@ -18,7 +18,7 @@ resource "google_compute_subnetwork" "subnet_primary" {
   ip_cidr_range            = var.subnet_cidr_block
   region                   = var.region
   network                  = google_compute_network.custom_vpc.self_link
-  private_ip_google_access = true # As per architecture
+  private_ip_google_access = true # As per architect
 
   labels = {
     environment = var.environment
