@@ -3,42 +3,32 @@ variable "project_id" {
   type        = string
 }
 
-variable "vpc_network_name" {
-  description = "Name of the VPC network to apply firewall rules to."
-  type        = string
-}
-
-variable "subnet_ip_cidr_range" {
-  description = "IP CIDR range of the subnet (used in description for clarity, not for rule matching)."
-  type        = string
-}
-
-variable "ssh_ingress_source_ranges" {
-  description = "List of IP CIDR ranges that are allowed to SSH into instances."
-  type        = list(string)
-}
-
-variable "ssh_target_tags" {
-  description = "Network tags for instances that should allow SSH access."
-  type        = list(string)
-}
-
-variable "firewall_priority" {
-  description = "Priority for firewall rules. Lower values mean higher priority."
-  type        = number
-}
-
 variable "environment" {
-  description = "Deployment environment (e.g., dev, staging, prod) for naming and labels."
+  description = "The environment (e.g., dev, stage, prod)."
   type        = string
 }
 
-variable "project_name_prefix" {
-  description = "A short identifier for the project, used in resource naming conventions and labels."
+variable "project_name" {
+  description = "A short name for the project, used in resource naming."
   type        = string
 }
 
-variable "region" {
-  description = "GCP Region for naming purposes."
+variable "vpc_network_name" {
+  description = "The name of the VPC network to apply firewall rules to."
   type        = string
+}
+
+variable "firewall_ssh_name" {
+  description = "The name for the SSH ingress firewall rule."
+  type        = string
+}
+
+variable "firewall_egress_name" {
+  description = "The name for the all egress firewall rule."
+  type        = string
+}
+
+variable "github_ci_cd_source_ranges" {
+  description = "List of CIDR ranges for GitHub CI/CD to allow SSH access."
+  type        = list(string)
 }
