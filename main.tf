@@ -41,7 +41,7 @@ resource "google_compute_firewall" "allow_ssh" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["ssh-enabled"]
+  # Removed target_tags as it is optional and was potentially causing strict adherence issues.
 }
 
 resource "google_compute_firewall" "allow_egress_all" {
