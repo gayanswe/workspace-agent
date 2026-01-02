@@ -18,13 +18,6 @@ resource "google_compute_network" "vpc" {
   project                 = var.project_id
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
-
-  labels = {
-    environment = var.environment
-    project      = var.project_name
-    managed_by  = "terraform"
-    created_by  = "opscontinuum"
-  }
 }
 
 resource "google_compute_subnetwork" "subnet" {
@@ -34,42 +27,6 @@ resource "google_compute_subnetwork" "subnet" {
   network                  = google_compute_network.vpc.self_link
   ip_cidr_range            = var.subnet_cidr
   private_ip_google_access = true
-
-  labels = {
-    environment = var.environment
-    project      = var.project_name
-    managed_by  = "terraform"
-    created_by  = "opscontinuum"
-  }
-}
-
-resource "google_compute_firewall" "allow_ssh_ingress" {
-  name      = "${var.vpc_name}-allow-ssh-ingress"
-  project   = var.project_id
-  network   = google_compute_network.vpc.self_link
-  direction = "INGRESS"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow SSH ingress from any IP to the VPC."
-}
-
-resource "google_compute_firewall" "allow_all_egress" {
-  name      = "${var.vpc_name}-allow-all-egress"
-  project   = var.project_id
-  network   = google_compute_network.vpc.self_link
-  direction = "EGRESS"
-
-  allow {
-    protocol = "all"
-  }
-
-  destination_ranges = ["0.0.0.0/0"]
-  description        = "Allow all egress traffic to any IP from the VPC."
 }
 
 resource "google_compute_router" "router" {
@@ -86,4 +43,52 @@ resource "google_compute_router_nat" "nat" {
   router                             = google_compute_router.router.name
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
+
+resource "google_compute_firewall" "allow_ssh" {
+  name      = "new-project-allow-ssh"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "INGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["ssh-enabled"]
+  priority      = 1000
+}
+
+resource "google_compute_firewall" "deny_all_ingress" {
+  name      = "new-project-deny-all-ingress"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "INGRESS"
+
+  deny {
+    protocol = "all"
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  priority      = 65535
+}
+
+resource "google_compute_firewall" "allow_egress_all" {
+  name      = "${var.vpc_name}-allow-egress-all"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "EGRESS"
+
+  allow {
+    protocol = "all"
+  }
+
+  destination_ranges = ["0.0.0.0/0"]
+  priority           = 1000
 }
