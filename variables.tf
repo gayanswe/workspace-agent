@@ -1,49 +1,53 @@
 variable "project_id" {
-  description = "GCP Project ID."
+  description = "GCP Project ID"
   type        = string
   default     = "euphoric-effect-479410-a6"
 }
 
 variable "region" {
-  description = "GCP Region for resource deployment."
+  description = "GCP Region for resource deployment"
   type        = string
   default     = "us-east4"
 }
 
 variable "environment" {
-  description = "Deployment environment (e.g., dev, staging, prod)."
+  description = "The environment (e.g., dev, stage, prod), used in resource naming"
   type        = string
   default     = "dev"
 }
 
-variable "project_name_prefix" {
-  description = "A short identifier for the project, used in resource naming conventions (e.g., 'newproject')."
+variable "project_name" {
+  description = "A short name for the project, used in resource naming"
   type        = string
   default     = "newproject"
 }
 
-variable "subnet_ip_cidr_range" {
-  description = "IP CIDR range for the custom subnet."
+variable "vpc_cidr_range" {
+  description = "The CIDR range for the VPC network"
   type        = string
   default     = "10.0.4.0/24"
+  validation {
+    condition     = can(cidrhost(var.vpc_cidr_range, 0))
+    error_message = "The vpc_cidr_range must be a valid CIDR block."
+  }
 }
 
-variable "ssh_ingress_source_ranges" {
-  description = "List of IP CIDR ranges that are allowed to SSH into instances. For production, ensure these are tightly controlled and regularly updated, especially for dynamic sources like GitHub CI/CD."
+variable "subnet_cidr_range" {
+  description = "The CIDR range for the private subnetwork"
+  type        = string
+  default     = "10.0.4.0/24"
+  validation {
+    condition     = can(cidrhost(var.subnet_cidr_range, 0))
+    error_message = "The subnet_cidr_range must be a valid CIDR block."
+  }
+}
+
+variable "github_ci_cd_source_ranges" {
+  description = "List of CIDR ranges for GitHub CI/CD to allow SSH access. This should be explicitly configured from the dashboard. Default is a dummy reserved range for security."
   type        = list(string)
-  # Example GitHub Actions IP ranges (subject to change).
-  # Refer to https://api.github.com/meta for current IP ranges under the 'actions' key, and manage dynamically in production.
-  default     = ["140.82.112.0/20", "18.150.96.0/20", "185.199.108.0/22"]
-}
-
-variable "ssh_target_tags" {
-  description = "Network tags for instances that should allow SSH access."
-  type        = list(string)
-  default     = ["ssh-target"]
-}
-
-variable "firewall_priority" {
-  description = "Priority for firewall rules. Lower values mean higher priority."
-  type        = number
-  default     = 1000
+  default     = ["192.0.2.0/24"] # Placeholder: TEST-NET-1. Update with specific GitHub CI/CD IP ranges.
+  validation {
+    condition = length(var.github_ci_cd_source_ranges) > 0 ? all([for cidr in var.github_ci_cd_source_ranges : can(cidrhost(cidr, 0))]...) : true
+    error_message = "Each GitHub CI/CD source range must be a valid CIDR block, or the list can be empty."
+  }
 }
