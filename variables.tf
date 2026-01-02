@@ -1,35 +1,44 @@
 variable "project_id" {
-  description = "GCP Project ID. Configured in the dashboard."
+  description = "The GCP project ID where resources will be created."
   type        = string
   default     = "euphoric-effect-479410-a6"
 }
 
 variable "region" {
-  description = "GCP Region for resource deployment."
+  description = "The GCP region for the VPC and subnet."
   type        = string
   default     = "us-east4"
 }
 
 variable "environment" {
-  description = "Deployment environment (e.g., dev, stage, prod)."
+  description = "The deployment environment (e.g., development, staging, production)."
   type        = string
-  default     = "dev"
+  default     = "development" # As per Jin's proposal
 }
 
-variable "project_name" {
-  description = "Logical project name used in resource naming conventions."
+variable "project_name_prefix" {
+  description = "A short prefix for resource naming, typically derived from the project name."
   type        = string
-  default     = "newproject"
+  default     = "new-project" # Derived from "New Project-infrastructure"
 }
 
-variable "subnet_cidr" {
-  description = "CIDR block for the private subnet."
+variable "vpc_cidr_range" {
+  description = "The primary CIDR range for the VPC network."
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "subnet_cidr_range" {
+  description = "The CIDR range for the private subnet."
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "github_actions_ip_ranges" {
-  description = "List of CIDR ranges for GitHub Actions runners to allow SSH ingress. IMPORTANT: Update this with current GitHub Actions IP ranges from https://api.github.com/meta or equivalent before deployment. Default is a common, but potentially incomplete, placeholder example."
+variable "ssh_source_ranges" {
+  description = "List of CIDR blocks from which SSH access (TCP:22) is allowed to instances in the private subnet."
   type        = list(string)
-  default     = ["140.82.112.0/20"] # Example placeholder, check GitHub API for current ranges
+  # WARNING: 0.0.0.0/0 is highly permissive for SSH access.
+  # In a production environment, this should be restricted to known administration IPs.
+  # For this exercise, it aligns with "client-ip]/32" as a placeholder for allowing ingress.
+  default = ["0.0.0.0/0"]
 }
