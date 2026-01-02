@@ -1,14 +1,14 @@
 variable "project_id" {
-  description = "The ID of the project in which to provision resources."
+  description = "Project ID"
   type        = string
 }
 
 variable "network_name" {
-  description = "The name of the network to attach the firewall to."
+  description = "Network Name"
   type        = string
 }
 
-variable "environment" {
-    description = "The environment this is deployed to."
-    type = string
+variable "allow_ssh_from" {
+  description = "Source IP range for SSH access"
+  type        = string
 }
