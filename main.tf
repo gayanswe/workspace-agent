@@ -21,7 +21,7 @@ resource "google_compute_network" "vpc" {
 
   labels = {
     environment = var.environment
-    project     = var.project_name
+    project      = var.project_name
     managed_by  = "terraform"
     created_by  = "opscontinuum"
   }
@@ -37,7 +37,7 @@ resource "google_compute_subnetwork" "subnet" {
 
   labels = {
     environment = var.environment
-    project     = var.project_name
+    project      = var.project_name
     managed_by  = "terraform"
     created_by  = "opscontinuum"
   }
@@ -56,9 +56,6 @@ resource "google_compute_firewall" "allow_ssh_ingress" {
 
   source_ranges = ["0.0.0.0/0"]
   description   = "Allow SSH ingress from any IP to the VPC."
-
-  # Note: google_compute_firewall does not directly support labels,
-  # but metadata can be used with target_tags on instances.
 }
 
 resource "google_compute_firewall" "allow_all_egress" {
@@ -73,4 +70,20 @@ resource "google_compute_firewall" "allow_all_egress" {
 
   destination_ranges = ["0.0.0.0/0"]
   description        = "Allow all egress traffic to any IP from the VPC."
+}
+
+resource "google_compute_router" "router" {
+  name    = "${var.vpc_name}-router"
+  project = var.project_id
+  region  = var.region
+  network = google_compute_network.vpc.self_link
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = "${var.vpc_name}-nat"
+  project                            = var.project_id
+  region                             = var.region
+  router                             = google_compute_router.router.name
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
