@@ -3,37 +3,35 @@ provider "google" {
   region  = var.region
 }
 
-module "vpc" {
+locals {
+  # Naming convention: {env}-{project}-{resource}-{region}
+  vpc_name               = "${var.environment}-${var.project_name}-vpc-${var.region}"
+  private_subnet_name    = "${var.environment}-${var.project_name}-private-subnet-${var.region}"
+  firewall_ssh_name      = "${var.environment}-${var.project_name}-allow-ssh-github"
+  firewall_egress_name   = "${var.environment}-${var.project_name}-egress-all"
+}
+
+module "vpc_network" {
   source = "./modules/vpc"
 
-  project_id          = var.project_id
-  region              = var.region
-  environment         = var.environment
-  project_name_prefix = var.project_name_prefix
-  subnet_ip_cidr_range = var.subnet_ip_cidr_range
+  project_id        = var.project_id
+  region            = var.region
+  environment       = var.environment
+  project_name      = var.project_name
+  vpc_name          = local.vpc_name
+  vpc_cidr_range    = var.vpc_cidr_range
+  subnet_name       = local.private_subnet_name
+  subnet_cidr_range = var.subnet_cidr_range
 }
 
-module "firewall" {
+module "firewall_rules" {
   source = "./modules/firewall"
 
-  project_id               = var.project_id
-  vpc_network_name         = module.vpc.network_name
-  subnet_ip_cidr_range     = var.subnet_ip_cidr_range
-  ssh_ingress_source_ranges = var.ssh_ingress_source_ranges
-  ssh_target_tags          = var.ssh_target_tags
-  firewall_priority        = var.firewall_priority
-  environment              = var.environment
-  project_name_prefix      = var.project_name_prefix
-  region                   = var.region
-}
-
-module "nat" {
-  source = "./modules/nat"
-
-  project_id          = var.project_id
-  region              = var.region
-  vpc_network_name    = module.vpc.network_name
-  subnet_self_link    = module.vpc.subnet_self_link
-  environment         = var.environment
-  project_name_prefix = var.project_name_prefix
+  project_id                   = var.project_id
+  environment                  = var.environment
+  project_name                 = var.project_name
+  vpc_network_name             = module.vpc_network.vpc_name
+  firewall_ssh_name            = local.firewall_ssh_name
+  firewall_egress_name         = local.firewall_egress_name
+  github_ci_cd_source_ranges   = var.github_ci_cd_source_ranges
 }
