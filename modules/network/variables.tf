@@ -1,39 +1,34 @@
 variable "project_id" {
-  description = "GCP Project ID."
+  description = "The GCP project ID."
   type        = string
 }
 
 variable "region" {
-  description = "GCP Region for resource deployment."
+  description = "The GCP region for the network resources."
   type        = string
 }
 
 variable "environment" {
-  description = "Deployment environment (e.g., dev, stage, prod)."
+  description = "The deployment environment (e.g., 'dev', 'prod'). Used for naming conventions."
   type        = string
 }
 
-variable "project_name" {
-  description = "Logical project name used in resource naming conventions."
+variable "project_prefix" {
+  description = "A short prefix for project resources, used in naming conventions."
   type        = string
 }
 
-variable "vpc_name" {
-  description = "Name for the custom VPC network."
+variable "vpc_cidr_block" {
+  description = "The primary CIDR range for the custom VPC."
   type        = string
 }
 
-variable "subnet_name" {
-  description = "Name for the private subnet."
+variable "subnet_cidr_block" {
+  description = "The CIDR range for the main subnetwork."
   type        = string
 }
 
-variable "subnet_cidr" {
-  description = "CIDR block for the private subnet."
+variable "subnet_name_suffix" {
+  description = "A suffix to append to the subnet name."
   type        = string
-}
-
-variable "github_actions_ip_ranges" {
-  description = "List of CIDR ranges for GitHub Actions runners to allow SSH ingress."
-  type        = list(string)
 }
