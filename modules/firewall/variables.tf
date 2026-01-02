@@ -1,15 +1,5 @@
 variable "project_id" {
-  description = "GCP Project ID."
-  type        = string
-}
-
-variable "environment" {
-  description = "Deployment environment (e.g., dev, prod, staging)."
-  type        = string
-}
-
-variable "project_short_name" {
-  description = "Short name for the project, used in resource naming conventions."
+  description = "The GCP project ID."
   type        = string
 }
 
@@ -18,7 +8,24 @@ variable "network_name" {
   type        = string
 }
 
-variable "client_ip_ssh_source_range" {
-  description = "CIDR block(s) from which SSH access (port 22) is allowed."
+variable "environment" {
+  description = "The deployment environment."
+  type        = string
+}
+
+variable "project_name_prefix" {
+  description = "A short prefix for resource naming."
+  type        = string
+}
+
+variable "ssh_source_ranges" {
+  description = "List of CIDR blocks from which SSH access (TCP:22) is allowed."
   type        = list(string)
+}
+
+variable "subnet_self_link" {
+  description = "Self link of the subnet for context, though not directly used in firewall rules for source/destination."
+  type        = string
+  # Added for completeness, but not directly used in rule definition.
+  # The subnet CIDR is implied for instances within it, which are targeted by tags.
 }
