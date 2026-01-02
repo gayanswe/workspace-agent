@@ -1,6 +1,8 @@
+# Terraform Backend Configuration
+# Using local state (stored in repo) for simplicity
+# For production, configure a remote backend (GCS, S3, etc.)
+
 terraform {
-  backend "gcs" {
-    bucket = "euphoric-effect-479410-a6-tfstate"
-    prefix = "terraform/state"
-  }
+  # Local backend - state stored in terraform.tfstate file
+  # No remote storage required
 }
