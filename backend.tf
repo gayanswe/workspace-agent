@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "tf-state-euphoric-effect-479410-a6" # This GCS bucket needs to be created manually once.
+    bucket = "euphoric-effect-479410-a6-tfstate"
     prefix = "terraform/state"
   }
 }
