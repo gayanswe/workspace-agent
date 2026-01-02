@@ -1,41 +1,29 @@
 variable "project_id" {
-  description = "The GCP project ID to deploy resources into."
+  description = "GCP Project ID"
   type        = string
   default     = "euphoric-effect-479410-a6"
 }
 
 variable "region" {
-  description = "The GCP region for the network resources."
+  description = "GCP Region"
   type        = string
   default     = "us-east4"
 }
 
-variable "environment" {
-  description = "The deployment environment (e.g., 'dev', 'prod', 'staging'). Used for naming conventions."
+variable "vpc_name" {
+  description = "Name of the VPC to create"
   type        = string
-  default     = "dev" # Defaulting to 'dev' as no specific environment was provided.
+  default     = "new-project-vpc"
 }
 
-variable "project_name_prefix" {
-  description = "A prefix for resource names, typically derived from the project's functional name."
-  type        = string
-  default     = "new-project" # Derived from "New Project-infrastructure"
-}
-
-variable "vpc_network_name" {
-  description = "The name for the custom VPC network."
-  type        = string
-  default     = "vpc" # Base name, will be prefixed by environment, project_name_prefix, and suffixed by region
-}
-
-variable "subnet_cidr_block" {
-  description = "The CIDR block for the subnet."
+variable "subnet_cidr" {
+  description = "CIDR range for the primary subnet"
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "ssh_allowed_ips" {
-  description = "List of CIDR blocks that are allowed to SSH (TCP port 22). IMPORTANT: Restrict this to known IPs in production."
+variable "ssh_source_ranges" {
+  description = "List of CIDR ranges that can initiate SSH connections. Use ['0.0.0.0/0'] for public."
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Default to open for quick setup; **strongly recommend restricting this in production.**
+  default     = ["0.0.0.0/0"]
 }
