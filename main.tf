@@ -18,6 +18,13 @@ resource "google_compute_network" "vpc" {
   project                 = var.project_id
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
+
+  labels = {
+    environment = var.environment
+    project     = var.project_name
+    managed_by  = "terraform"
+    created_by  = "opscontinuum"
+  }
 }
 
 resource "google_compute_subnetwork" "subnet" {
@@ -27,10 +34,17 @@ resource "google_compute_subnetwork" "subnet" {
   network                  = google_compute_network.vpc.self_link
   ip_cidr_range            = var.subnet_cidr
   private_ip_google_access = true
+
+  labels = {
+    environment = var.environment
+    project     = var.project_name
+    managed_by  = "terraform"
+    created_by  = "opscontinuum"
+  }
 }
 
-resource "google_compute_firewall" "allow_ssh" {
-  name      = "${var.vpc_name}-allow-ssh"
+resource "google_compute_firewall" "allow_ssh_ingress" {
+  name      = "${var.vpc_name}-allow-ssh-ingress"
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
   direction = "INGRESS"
@@ -40,12 +54,15 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = var.ssh_source_ranges # Using the variable for source ranges
-  target_tags   = ["ssh-enabled"]       # Apply to instances with this tag
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Allow SSH ingress from any IP to the VPC."
+
+  # Note: google_compute_firewall does not directly support labels,
+  # but metadata can be used with target_tags on instances.
 }
 
-resource "google_compute_firewall" "allow_egress" {
-  name      = "${var.vpc_name}-allow-egress"
+resource "google_compute_firewall" "allow_all_egress" {
+  name      = "${var.vpc_name}-allow-all-egress"
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
   direction = "EGRESS"
@@ -55,20 +72,5 @@ resource "google_compute_firewall" "allow_egress" {
   }
 
   destination_ranges = ["0.0.0.0/0"]
-}
-
-resource "google_compute_router" "router" {
-  name    = "${var.vpc_name}-router"
-  project = var.project_id
-  region  = var.region
-  network = google_compute_network.vpc.self_link
-}
-
-resource "google_compute_router_nat" "nat" {
-  name                               = "${var.vpc_name}-nat"
-  project                            = var.project_id
-  region                             = var.region
-  router                             = google_compute_router.router.name
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  description        = "Allow all egress traffic to any IP from the VPC."
 }
