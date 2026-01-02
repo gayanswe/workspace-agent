@@ -4,32 +4,26 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "The GCP region for the VPC and subnet."
+  description = "The GCP region for the network and subnetwork."
   type        = string
 }
 
 variable "environment" {
-  description = "The deployment environment (e.g., development, staging, production)."
+  description = "The deployment environment, used for naming."
   type        = string
 }
 
 variable "project_name_prefix" {
-  description = "A short prefix for resource naming."
+  description = "A prefix for resource names."
   type        = string
 }
 
-variable "vpc_cidr_range" {
-  description = "The primary CIDR range for the VPC network."
+variable "vpc_network_name" {
+  description = "Base name for the VPC network resource."
   type        = string
 }
 
-variable "subnet_cidr_range" {
-  description = "The CIDR range for the private subnet."
+variable "subnet_cidr_block" {
+  description = "The CIDR range for the primary subnetwork."
   type        = string
-}
-
-variable "private_google_access" {
-  description = "Whether to enable Private Google Access for instances in this subnet."
-  type        = bool
-  default     = false # Default to false, but architecture specifies true
 }
