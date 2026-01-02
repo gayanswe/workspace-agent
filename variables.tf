@@ -1,11 +1,11 @@
 variable "project_id" {
-  description = "The GCP project ID where resources will be deployed."
+  description = "The GCP project ID to deploy resources into."
   type        = string
-  default     = "euphoric-effect-479410-a6" # Hardcoded as per instructions
+  default     = "euphoric-effect-479410-a6"
 }
 
 variable "region" {
-  description = "The GCP region for deploying resources."
+  description = "The GCP region for the network resources."
   type        = string
   default     = "us-east4"
 }
@@ -13,35 +13,29 @@ variable "region" {
 variable "environment" {
   description = "The deployment environment (e.g., 'dev', 'prod', 'staging'). Used for naming conventions."
   type        = string
-  default     = "dev"
+  default     = "dev" # Defaulting to 'dev' as no specific environment was provided.
 }
 
-variable "project_prefix" {
-  description = "A short prefix for project resources, used in naming conventions. Corresponds to 'New Project' context."
+variable "project_name_prefix" {
+  description = "A prefix for resource names, typically derived from the project's functional name."
   type        = string
-  default     = "newproject"
+  default     = "new-project" # Derived from "New Project-infrastructure"
 }
 
-variable "vpc_cidr_block" {
-  description = "The primary CIDR range for the custom VPC (e.g., '10.0.0.0/16')."
+variable "vpc_network_name" {
+  description = "The name for the custom VPC network."
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "vpc" # Base name, will be prefixed by environment, project_name_prefix, and suffixed by region
 }
 
 variable "subnet_cidr_block" {
-  description = "The CIDR range for the main subnetwork (e.g., '10.0.4.0/24')."
+  description = "The CIDR block for the subnet."
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "subnet_name_suffix" {
-  description = "A suffix to append to the subnet name for better identification (e.g., 'web', 'db')."
-  type        = string
-  default     = "web"
-}
-
-variable "ssh_ingress_source_ranges" {
-  description = "List of CIDR ranges allowed to ingress TCP/22 (SSH). For production, restrict this to known IPs or use IAP/Bastion."
+variable "ssh_allowed_ips" {
+  description = "List of CIDR blocks that are allowed to SSH (TCP port 22). IMPORTANT: Restrict this to known IPs in production."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["0.0.0.0/0"] # Default to open for quick setup; **strongly recommend restricting this in production.**
 }
