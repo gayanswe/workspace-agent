@@ -1,19 +1,19 @@
-output "vpc_name" {
+output "network_name" {
   description = "The name of the created VPC network."
-  value       = google_compute_network.vpc.name
+  value       = google_compute_network.custom_vpc.name
 }
 
-output "vpc_self_link" {
+output "network_self_link" {
   description = "The self_link of the created VPC network."
-  value       = google_compute_network.vpc.self_link
+  value       = google_compute_network.custom_vpc.self_link
 }
 
 output "subnet_name" {
-  description = "The name of the created private subnetwork."
-  value       = google_compute_subnetwork.private.name
+  description = "The name of the created subnetwork."
+  value       = google_compute_subnetwork.subnet_primary.name
 }
 
-output "subnet_self_link" {
-  description = "The self_link of the created private subnetwork."
-  value       = google_compute_subnetwork.private.self_link
+output "subnet_id" {
+  description = "The ID of the created subnetwork."
+  value       = google_compute_subnetwork.subnet_primary.id
 }
