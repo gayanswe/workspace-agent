@@ -14,64 +14,47 @@ provider "google" {
 }
 
 resource "google_compute_network" "vpc" {
-  name                    = var.vpc_name
+  name                    = "${var.vpc_name}-vpc-${var.region}"
   project                 = var.project_id
-  auto_create_subnetworks = false           # CRITICAL for manual subnets
+  auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
 }
 
 resource "google_compute_subnetwork" "private_subnet" {
-  name                     = "${var.vpc_name}-private-subnet"
+  name                     = "${var.vpc_name}-private-subnet-${var.region}"
   project                  = var.project_id
   region                   = var.region
-  network                  = google_compute_network.vpc.self_link # Use self_link
-  ip_cidr_range            = var.private_subnet_cidr
-  private_ip_google_access = true           # Best practice for private access
+  network                  = google_compute_network.vpc.self_link
+  ip_cidr_range            = var.subnet_cidr
+  private_ip_google_access = true
 }
 
-resource "google_compute_router" "router" {
-  name    = "${var.vpc_name}-router"
-  project = var.project_id
-  region  = var.region
-  network = google_compute_network.vpc.self_link
-}
-
-resource "google_compute_router_nat" "nat" {
-  name                               = "${var.vpc_name}-nat"
-  project                            = var.project_id
-  region                             = var.region
-  router                             = google_compute_router.router.name
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-  # This configures NAT for all primary IP ranges of all subnets on the router's network.
-  # For more granular control, use "LIST_OF_SUBNETWORKS" and specify subnetwork_ip_ranges_for_nat.
-}
-
-resource "google_compute_firewall" "allow_ssh_github" {
-  name      = "${var.vpc_name}-allow-ssh-github"
+resource "google_compute_firewall" "allow_ssh" {
+  name      = "${var.vpc_name}-allow-ssh"
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
   direction = "INGRESS"
+  priority  = 1000
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  source_ranges = var.github_cicd_ips
-  description   = "Allows SSH from GitHub Actions CI/CD IP ranges"
+  source_ranges = var.ssh_source_ranges
+  description   = "Allows SSH access on TCP port 22 from specified source ranges."
 }
 
 resource "google_compute_firewall" "allow_egress_all" {
-  name            = "${var.vpc_name}-allow-egress-all"
-  project         = var.project_id
-  network         = google_compute_network.vpc.self_link
-  direction       = "EGRESS" # ALWAYS specify direction
+  name          = "${var.vpc_name}-allow-egress-all"
+  project       = var.project_id
+  network       = google_compute_network.vpc.self_link
+  direction     = "EGRESS"
+  priority      = 1000
+  destination_ranges = ["0.0.0.0/0"]
 
   allow {
-    protocol = "all" # Allows all protocols
+    protocol = "all"
   }
-
-  destination_ranges = ["0.0.0.0/0"] # Allows egress to all destinations
-  description        = "Allows all outbound traffic from the VPC network"
+  description = "Allows all outbound traffic from the VPC."
 }
