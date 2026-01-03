@@ -11,25 +11,25 @@ variable "region" {
 }
 
 variable "vpc_name" {
-  description = "Name of the VPC"
+  description = "Name of the VPC. Will be used as a prefix for other resources."
   type        = string
   default     = "new-project-vpc"
 }
 
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC. Note: GCP VPCs are global and do not have a primary CIDR block. This is mainly for documentation or internal firewall rules."
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
 variable "subnet_cidr" {
-  description = "CIDR range for the primary subnet within the VPC"
+  description = "CIDR range for the private subnet"
   type        = string
   default     = "10.0.4.0/24"
 }
 
-variable "github_ci_cd_ip_ranges" {
-  description = "List of IP CIDR ranges for GitHub CI/CD that require SSH access. This should be specific IPs, not 0.0.0.0/0 in production."
+variable "ssh_source_ranges" {
+  description = "List of CIDR blocks allowed to SSH into instances with 'ssh-enabled' tag."
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Placeholder: Replace with actual GitHub CI/CD IP ranges from dashboard configuration
-}
-
-variable "vpc_cidr" {
-  description = "The overall CIDR block for the VPC. Used for internal firewall rules."
-  type        = string
-  default     = "10.0.4.0/24" # Aligns with Zen's architecture diagram for the VPC range
+  default     = ["0.0.0.0/0"] # For broad access; restrict this in production.
 }
