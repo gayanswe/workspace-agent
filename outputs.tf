@@ -8,14 +8,14 @@ output "vpc_self_link" {
   value       = google_compute_network.vpc.self_link
 }
 
-output "private_subnet_id" {
+output "subnet_id" { # Updated output name
   description = "The ID of the private subnet"
-  value       = google_compute_subnetwork.private_subnet.id
+  value       = google_compute_subnetwork.subnet.id
 }
 
-output "private_subnet_self_link" {
+output "subnet_self_link" { # Updated output name
   description = "The self_link of the private subnet"
-  value       = google_compute_subnetwork.private_subnet.self_link
+  value       = google_compute_subnetwork.subnet.self_link
 }
 
 output "cloud_nat_router_name" {
