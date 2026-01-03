@@ -16,7 +16,7 @@ provider "google" {
 resource "google_compute_network" "vpc" {
   name                    = var.vpc_name
   project                 = var.project_id
-  auto_create_subnetworks = false           # CRITICAL for manual subnets, fixed from validation
+  auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
 }
 
@@ -24,61 +24,59 @@ resource "google_compute_subnetwork" "private_subnet" {
   name                     = "${var.vpc_name}-private-subnet"
   project                  = var.project_id
   region                   = var.region
-  network                  = google_compute_network.vpc.self_link # Use self_link
+  network                  = google_compute_network.vpc.self_link
   ip_cidr_range            = var.private_subnet_cidr
-  private_ip_google_access = true            # Best practice for private access
+  private_ip_google_access = true
 }
 
-# Cloud Router for NAT
-resource "google_compute_router" "router" {
-  name    = "${var.vpc_name}-router"
+resource "google_compute_router" "nat_router" {
+  name    = "${var.vpc_name}-nat-router"
   project = var.project_id
   region  = var.region
   network = google_compute_network.vpc.self_link
 }
 
-# Cloud NAT for private subnet egress
-resource "google_compute_router_nat" "nat" {
-  name                               = "${var.vpc_name}-nat"
+resource "google_compute_router_nat" "cloud_nat" {
+  name                               = "${var.vpc_name}-nat-gateway"
   project                            = var.project_id
   region                             = var.region
-  router                             = google_compute_router.router.name
+  router                             = google_compute_router.nat_router.name
   nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES" # Covers all IPs in defined subnets
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
   log_config {
     enable = true
     filter = "ERRORS_ONLY"
   }
 }
 
-# Firewall rule: Allow Ingress TCP/22 (SSH)
-resource "google_compute_firewall" "allow_ssh" {
-  name      = "${var.vpc_name}-allow-ssh"
-  project   = var.project_id                             # Fixed: ALWAYS include project
-  network   = google_compute_network.vpc.self_link       # Use self_link, NOT name
-  direction = "INGRESS"                                  # Fixed: ALWAYS specify direction
+resource "google_compute_firewall" "allow_ssh_ingress" {
+  name      = "${var.vpc_name}-allow-ssh-ingress"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "INGRESS"
+  priority  = 1000
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  source_ranges = var.ssh_source_ranges # Configurable via variable, defaults to 0.0.0.0/0
+  source_ranges = var.ssh_source_ranges
   target_tags   = ["ssh-enabled"]
-  description   = "Allows SSH access on TCP port 22"
+  description   = "Allow SSH access on port 22 from specified IP ranges."
 }
 
-# Firewall rule: Allow Egress All
-resource "google_compute_firewall" "allow_egress_all" {
-  name      = "${var.vpc_name}-allow-egress-all"
-  project   = var.project_id                             # Fixed: ALWAYS include project
-  network   = google_compute_network.vpc.self_link       # Use self_link, NOT name
-  direction = "EGRESS"                                   # Fixed: ALWAYS specify direction
+resource "google_compute_firewall" "allow_all_egress" {
+  name      = "${var.vpc_name}-allow-all-egress"
+  project   = var.project_id
+  network   = google_compute_network.vpc.self_link
+  direction = "EGRESS"
+  priority  = 1000
 
   allow {
     protocol = "all"
   }
 
-  destination_ranges = ["0.0.0.0/0"] # Egress rules use destination_ranges
-  description        = "Allows all outbound traffic from the VPC"
+  destination_ranges = ["0.0.0.0/0"]
+  description        = "Allow all outbound traffic to any destination."
 }
