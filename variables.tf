@@ -11,9 +11,9 @@ variable "region" {
 }
 
 variable "vpc_name" {
-  description = "Name of the VPC. Will be used as a prefix for other resources."
+  description = "Name of the VPC. Will be used as a prefix for other resources. Made more explicit to avoid regional confusion."
   type        = string
-  default     = "new-project-vpc"
+  default     = "new-project-main-vpc-us-east4" # Updated for explicit region in name
 }
 
 variable "vpc_cidr" {
@@ -25,7 +25,7 @@ variable "vpc_cidr" {
 variable "subnet_cidr" {
   description = "CIDR range for the private subnet"
   type        = string
-  default     = "10.0.4.0/24"
+  default     = "10.0.1.0/24" # Changed to match general subnet pattern
 }
 
 variable "ssh_source_ranges" {
