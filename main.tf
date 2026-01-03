@@ -16,59 +16,65 @@ provider "google" {
 resource "google_compute_network" "vpc" {
   name                    = var.vpc_name
   project                 = var.project_id
-  auto_create_subnetworks = false           # ✅ CRITICAL for manual subnets
+  auto_create_subnetworks = false           # CRITICAL for manual subnets
   routing_mode            = "REGIONAL"
 }
 
-resource "google_compute_subnetwork" "subnet" {
-  name                     = "${var.vpc_name}-subnet"
+resource "google_compute_subnetwork" "private_subnet" {
+  name                     = "${var.vpc_name}-private"
   project                  = var.project_id
   region                   = var.region
-  network                  = google_compute_network.vpc.self_link  # ✅ Use self_link
+  network                  = google_compute_network.vpc.self_link # Use self_link
   ip_cidr_range            = var.subnet_cidr
-  private_ip_google_access = true  # ✅ Best practice for private access
+  private_ip_google_access = true             # Best practice for private access
 }
 
-resource "google_compute_router" "router" {
-  name    = "${var.vpc_name}-router"
-  project = var.project_id
-  region  = var.region
-  network = google_compute_network.vpc.self_link
-}
-
-resource "google_compute_router_nat" "nat" {
-  name                               = "${var.vpc_name}-nat"
-  project                            = var.project_id
-  region                             = var.region
-  router                             = google_compute_router.router.name
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-}
-
-resource "google_compute_firewall" "allow_ssh_cicd" {
-  name      = "${var.vpc_name}-allow-ssh-cicd"
-  project   = var.project_id                             # ✅ ALWAYS include
-  network   = google_compute_network.vpc.self_link       # ✅ Use self_link, NOT name
-  direction = "INGRESS"                                  # ✅ ALWAYS specify direction
+resource "google_compute_firewall" "allow_ssh_ingress" {
+  name      = "${var.vpc_name}-allow-ssh-ingress"
+  project   = var.project_id                             # ALWAYS include
+  network   = google_compute_network.vpc.self_link       # Use self_link, NOT name
+  direction = "INGRESS"                                  # ALWAYS specify direction
+  priority  = 1000
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  source_ranges = var.github_ci_cd_ip_ranges # IPs from GitHub CI/CD, specified in variables.tf
-  target_tags   = ["ssh-cicd-enabled"]       # Optional: limit to tagged instances
+  source_ranges = var.ssh_source_ranges
+  target_tags   = ["ssh-enabled"] # Optional: limit to tagged instances
 }
 
-resource "google_compute_firewall" "allow_egress_all" {
-  name                = "${var.vpc_name}-allow-egress-all"
-  project             = var.project_id                             # ✅ ALWAYS include
-  network             = google_compute_network.vpc.self_link       # ✅ Use self_link, NOT name
-  direction           = "EGRESS"                                   # ✅ ALWAYS specify direction
+resource "google_compute_firewall" "allow_all_egress" {
+  name      = "${var.vpc_name}-allow-all-egress"
+  project   = var.project_id                             # ALWAYS include
+  network   = google_compute_network.vpc.self_link       # Use self_link, NOT name
+  direction = "EGRESS"                                   # ALWAYS specify direction
+  priority  = 1000
 
   allow {
     protocol = "all"
   }
 
-  destination_ranges = ["0.0.0.0/0"] # Allow all egress traffic
+  destination_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_router" "nat_router" {
+  name    = "${var.vpc_name}-nat-router"
+  project = var.project_id
+  region  = var.region
+  network = google_compute_network.vpc.self_link
+}
+
+resource "google_compute_router_nat" "cloud_nat" {
+  name                               = "${var.vpc_name}-nat"
+  project                            = var.project_id
+  region                             = var.region
+  router                             = google_compute_router.nat_router.name
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
 }
