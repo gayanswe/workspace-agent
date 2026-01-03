@@ -31,5 +31,5 @@ variable "private_subnet_cidr" {
 variable "ssh_source_ranges" {
   description = "List of CIDR ranges that are allowed to SSH into instances (e.g., your office IP, CI/CD runner IPs)"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Broad access by default, restrict in production
+  default     = ["0.0.0.0/0"]
 }
