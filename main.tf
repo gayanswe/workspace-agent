@@ -20,13 +20,14 @@ resource "google_compute_network" "vpc" {
   routing_mode            = "REGIONAL"
 }
 
-resource "google_compute_subnetwork" "private_subnet" {
-  name                     = "${var.vpc_name}-private"
+resource "google_compute_subnetwork" "subnet" { # Resource name standardized as per patterns
+  name                     = "${var.vpc_name}-subnet" # Updated internal name
   project                  = var.project_id
   region                   = var.region
   network                  = google_compute_network.vpc.self_link # Use self_link
   ip_cidr_range            = var.subnet_cidr
   private_ip_google_access = true             # Best practice for private access
+  # Removed explicit depends_on, relying on implicit dependency for self_link resolution
 }
 
 resource "google_compute_firewall" "allow_ssh_ingress" {
