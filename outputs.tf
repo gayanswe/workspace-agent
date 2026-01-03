@@ -20,10 +20,10 @@ output "private_subnet_self_link" {
 
 output "router_name" {
   description = "The name of the Cloud Router"
-  value       = google_compute_router.router.name
+  value       = google_compute_router.nat_router.name
 }
 
 output "nat_name" {
   description = "The name of the Cloud NAT gateway"
-  value       = google_compute_router_nat.nat.name
+  value       = google_compute_router_nat.cloud_nat.name
 }
