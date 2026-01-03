@@ -13,47 +13,37 @@ provider "google" {
   region  = var.region
 }
 
+locals {
+  # Derived names based on naming conventions and input variables
+  full_vpc_name        = "${var.environment}-${var.project_name_short}-vpc-${var.region}"
+  private_subnet_name  = "${var.environment}-${var.project_name_short}-private-subnet-${var.region}"
+  allow_ssh_fw_name    = "${var.environment}-${var.project_name_short}-allow-ssh"
+  allow_egress_fw_name = "${var.environment}-${var.project_name_short}-allow-egress"
+  router_name          = "${var.environment}-${var.project_name_short}-router-${var.region}"
+  nat_name             = "${var.environment}-${var.project_name_short}-nat-${var.region}"
+}
+
 resource "google_compute_network" "vpc" {
-  name                    = var.vpc_name
-  project                 = var.project_id
-  auto_create_subnetworks = false
+  name                    = local.full_vpc_name
+  project                 = var.project_id                 # ✅ ALWAYS include project
+  auto_create_subnetworks = false                          # ✅ CRITICAL for manual subnets
   routing_mode            = "REGIONAL"
 }
 
-resource "google_compute_subnetwork" "private_subnet" {
-  name                     = "${var.vpc_name}-private-subnet"
+resource "google_compute_subnetwork" "private" {
+  name                     = local.private_subnet_name
   project                  = var.project_id
   region                   = var.region
-  network                  = google_compute_network.vpc.self_link
+  network                  = google_compute_network.vpc.self_link # ✅ Use self_link
   ip_cidr_range            = var.private_subnet_cidr
-  private_ip_google_access = true
+  private_ip_google_access = true                         # ✅ Best practice for private access
 }
 
-resource "google_compute_router" "nat_router" {
-  name    = "${var.vpc_name}-nat-router"
-  project = var.project_id
-  region  = var.region
-  network = google_compute_network.vpc.self_link
-}
-
-resource "google_compute_router_nat" "cloud_nat" {
-  name                               = "${var.vpc_name}-nat-gateway"
-  project                            = var.project_id
-  region                             = var.region
-  router                             = google_compute_router.nat_router.name
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-  log_config {
-    enable = true
-    filter = "ERRORS_ONLY"
-  }
-}
-
-resource "google_compute_firewall" "allow_ssh_ingress" {
-  name      = "${var.vpc_name}-allow-ssh-ingress"
-  project   = var.project_id
-  network   = google_compute_network.vpc.self_link
-  direction = "INGRESS"
+resource "google_compute_firewall" "allow_ssh" {
+  name      = local.allow_ssh_fw_name
+  project   = var.project_id                             # ✅ ALWAYS include
+  network   = google_compute_network.vpc.self_link       # ✅ Use self_link, NOT name
+  direction = "INGRESS"                                  # ✅ ALWAYS specify direction
   priority  = 1000
 
   allow {
@@ -61,22 +51,40 @@ resource "google_compute_firewall" "allow_ssh_ingress" {
     ports    = ["22"]
   }
 
-  source_ranges = var.ssh_source_ranges
-  target_tags   = ["ssh-enabled"]
-  description   = "Allow SSH access on port 22 from specified IP ranges."
+  source_ranges = var.github_cicd_ip_ranges              # From variable for flexibility
+  target_tags   = ["ssh-enabled"]                        # Apply to instances with this tag
 }
 
-resource "google_compute_firewall" "allow_all_egress" {
-  name      = "${var.vpc_name}-allow-all-egress"
+resource "google_compute_firewall" "allow_egress" {
+  name      = local.allow_egress_fw_name
   project   = var.project_id
   network   = google_compute_network.vpc.self_link
-  direction = "EGRESS"
+  direction = "EGRESS"                                   # ✅ Explicitly egress
   priority  = 1000
 
   allow {
     protocol = "all"
   }
 
-  destination_ranges = ["0.0.0.0/0"]
-  description        = "Allow all outbound traffic to any destination."
+  destination_ranges = ["0.0.0.0/0"]                     # Allow all outbound traffic
+}
+
+resource "google_compute_router" "router" {
+  name    = local.router_name
+  project = var.project_id
+  region  = var.region
+  network = google_compute_network.vpc.self_link
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = local.nat_name
+  project                            = var.project_id
+  region                             = var.region
+  router                             = google_compute_router.router.name
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES" # Covers private subnet
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
 }
