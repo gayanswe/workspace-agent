@@ -15,10 +15,11 @@ on:
         options:
           - plan
           - apply
+          - destroy
 
 env:
   TF_VERSION: '1.5.0'
-  PROJECT_ID: 'proj_f04b629b'
+  PROJECT_ID: 'proj_16919a75'
   WEBHOOK_URL: 'https://opscontinuum-backend-927699342374.us-east4.run.app'
 
 jobs:
@@ -26,6 +27,7 @@ jobs:
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    if: github.event.inputs.action != 'destroy'
     permissions:
       contents: read
       id-token: write
@@ -89,6 +91,7 @@ jobs:
   approve:
     name: Approval Required
     needs: plan
+    if: github.event.inputs.action != 'destroy'
     runs-on: ubuntu-latest
     environment: 
       name: production
@@ -102,7 +105,7 @@ jobs:
     name: Terraform Apply
     needs: [plan, approve]
     runs-on: ubuntu-latest
-    if: github.event.inputs.action == 'apply' || github.event_name == 'push'
+    if: (github.event.inputs.action == 'apply' || github.event_name == 'push') && github.event.inputs.action != 'destroy'
     permissions:
       contents: read
       id-token: write
@@ -143,6 +146,66 @@ jobs:
           "run_id": ${{ github.run_id }},
           "status": "${{ job.status }}",
           "applied_by": "${{ github.actor }}",
+          "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        }
+        EOF
+
+  # Job 4: Terraform Destroy (manual trigger only)
+  destroy-approval:
+    name: ⚠️ Destroy Approval Required
+    if: github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+    - name: Destroy Approval Confirmed
+      run: |
+        echo "⚠️ DESTROY approved by ${{ github.actor }}"
+        echo "This will DELETE all infrastructure managed by Terraform!"
+
+  destroy:
+    name: 🔥 Terraform Destroy
+    needs: destroy-approval
+    if: github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    
+    - name: Terraform Init
+      run: terraform init
+    
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
+    
+    - name: Post Destroy Status
+      if: always()
+      run: |
+        echo "🔥 Infrastructure destroyed by ${{ github.actor }}"
+        curl -X POST "${{ env.WEBHOOK_URL }}/api/webhook/apply" \
+          -H "Content-Type: application/json" \
+          -d @- <<EOF
+        {
+          "project_id": "${{ env.PROJECT_ID }}",
+          "repo": "${{ github.repository }}",
+          "run_id": ${{ github.run_id }},
+          "status": "${{ job.status }}",
+          "action": "destroy",
+          "destroyed_by": "${{ github.actor }}",
           "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         }
         EOF

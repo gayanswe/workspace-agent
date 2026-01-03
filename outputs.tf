@@ -1,29 +1,29 @@
-output "vpc_id" {
-  description = "The ID of the custom VPC"
-  value       = google_compute_network.vpc.id
+output "vpc_name" {
+  description = "The name of the created VPC network"
+  value       = google_compute_network.vpc.name
 }
 
 output "vpc_self_link" {
-  description = "The self_link of the custom VPC"
+  description = "The self_link of the created VPC network"
   value       = google_compute_network.vpc.self_link
 }
 
-output "private_subnet_id" {
-  description = "The ID of the private subnet"
-  value       = google_compute_subnetwork.private.id
+output "subnet_name" {
+  description = "The name of the created subnetwork"
+  value       = google_compute_subnetwork.subnet.name
 }
 
-output "private_subnet_self_link" {
-  description = "The self_link of the private subnet"
-  value       = google_compute_subnetwork.private.self_link
+output "subnet_self_link" {
+  description = "The self_link of the created subnetwork"
+  value       = google_compute_subnetwork.subnet.self_link
 }
 
-output "cloud_router_name" {
-  description = "The name of the Cloud Router for NAT"
+output "router_name" {
+  description = "The name of the created Cloud Router"
   value       = google_compute_router.router.name
 }
 
-output "cloud_nat_name" {
-  description = "The name of the Cloud NAT gateway"
+output "nat_name" {
+  description = "The name of the created Cloud NAT"
   value       = google_compute_router_nat.nat.name
 }
